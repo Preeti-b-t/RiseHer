@@ -93,7 +93,7 @@ yarn-error.log*
 *.tar.gz
 *.rar
 *.7z
-RiseHer_Complete_Project.zip
+!/RiseHer_Complete_Project.zip
 .DS_Store
 .DS_Store?
 ._*

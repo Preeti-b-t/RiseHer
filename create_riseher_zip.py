@@ -21,12 +21,15 @@ def create_riseher_zip():
         output_zip.unlink()
 
     # Directories and files to include
-    include_dirs = ["backend", "frontend", "docs", "scripts", "tests"]
+    include_dirs = ["backend", "frontend", "docs", "scripts", "tests", "api"]
     include_files = [
         "README.md",
         "requirements.txt",
         ".env.example",
-        "run_riseher.sh"
+        "run_riseher.sh",
+        "Procfile",
+        "render.yaml",
+        "vercel.json"
     ]
 
     # Explicit exclusions
