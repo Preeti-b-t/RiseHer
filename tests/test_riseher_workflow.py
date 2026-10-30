@@ -223,3 +223,30 @@ def test_scenario_differentiation():
     # Assert distinct viability scores and recommendations
     assert a1["overall_viability_score"] != a2["overall_viability_score"]
     assert a2["overall_viability_score"] != a3["overall_viability_score"]
+
+def test_mentor_profile_endpoints():
+    # Login / switch as Kavita Rao (Mentor)
+    res = client.post("/api/auth/switch-demo?email=kavita.mentor@riseher.org")
+    assert res.status_code == 200
+    token = res.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # 1. GET /api/mentors/me
+    me_res = client.get("/api/mentors/me", headers=headers)
+    assert me_res.status_code == 200
+    mentor_data = me_res.json()
+    assert mentor_data["name"] == "Kavita Rao"
+    assert mentor_data["business_name"] == "LoomCraft Studio"
+    assert mentor_data["business_domain"] == "Fashion & Apparel"
+    assert mentor_data["years_experience"] >= 5
+    assert "E-Commerce" in mentor_data["expertise_areas"]
+
+    # 2. PUT /api/mentors/me
+    updated_bio = "Sustainable handloom advisor and D2C brand builder."
+    put_res = client.put("/api/mentors/me", headers=headers, json={
+        "bio": updated_bio,
+        "meeting_link": "https://meet.google.com/rsh-kavita-session"
+    })
+    assert put_res.status_code == 200
+    assert put_res.json()["bio"] == updated_bio
+    assert put_res.json()["meeting_link"] == "https://meet.google.com/rsh-kavita-session"

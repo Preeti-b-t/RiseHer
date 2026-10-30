@@ -10,7 +10,8 @@ import {
   TrendingUp,
   CheckCircle,
   ExternalLink,
-  Lock
+  Lock,
+  Download
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { AuthModal } from '../components/AuthModal';
@@ -75,6 +76,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          <a
+            href="/RiseHer_Complete_Project.zip"
+            download="RiseHer_Complete_Project.zip"
+            className="hidden md:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-plum/20 hover:border-plum text-xs sm:text-sm font-semibold text-plum hover:bg-blush transition-colors"
+            title="Download full project source code as ZIP"
+          >
+            <Download size={14} className="text-plum" />
+            <span>Download ZIP</span>
+          </a>
           <button
             onClick={handleGoToLogin}
             className="text-xs sm:text-sm font-semibold text-plum hover:text-empowerment-purple px-2 sm:px-3 py-2 transition-colors flex items-center gap-1"

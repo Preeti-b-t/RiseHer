@@ -55,10 +55,35 @@ app.include_router(admin.router)
 def health_check():
     return {"status": "ok", "database": "connected"}
 
-# Serve frontend production build if available
-from pathlib import Path
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from pathlib import Path
+
+@app.get("/api/download-zip")
+def download_project_zip():
+    zip_path = Path(__file__).resolve().parent.parent / "RiseHer_Complete_Project.zip"
+    if zip_path.exists():
+        return FileResponse(
+            path=str(zip_path),
+            filename="RiseHer_Complete_Project.zip",
+            media_type="application/zip"
+        )
+    from fastapi import HTTPException
+    raise HTTPException(status_code=404, detail="ZIP archive not found")
+
+@app.get("/api/download-frontend-zip")
+def download_frontend_zip():
+    zip_path = Path(__file__).resolve().parent.parent / "RiseHer_Frontend.zip"
+    if zip_path.exists():
+        return FileResponse(
+            path=str(zip_path),
+            filename="RiseHer_Frontend.zip",
+            media_type="application/zip"
+        )
+    from fastapi import HTTPException
+    raise HTTPException(status_code=404, detail="Frontend ZIP archive not found")
+
+# Serve frontend production build if available
+from fastapi.staticfiles import StaticFiles
 
 frontend_dist = Path(__file__).resolve().parent.parent / "frontend" / "dist"
 if frontend_dist.exists():

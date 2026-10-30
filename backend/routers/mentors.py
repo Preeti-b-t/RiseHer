@@ -5,13 +5,70 @@ from typing import List, Optional
 from backend.database import get_db
 from backend.models import User, MentorProfile, MentorshipRequest, EntrepreneurProfile
 from backend.schemas import (
-    MentorProfileOut, MentorshipRequestCreate, MentorshipRequestOut,
+    MentorProfileOut, MentorProfileUpdate, MentorshipRequestCreate, MentorshipRequestOut,
     MentorshipStatusUpdate, MentorshipFeedback
 )
 from backend.auth import get_current_user
 from backend.ai_engine import CentralAIEngine
 
 router = APIRouter(prefix="/api/mentors", tags=["Entrepreneur Connect"])
+
+def format_mentor_out(m: MentorProfile) -> MentorProfileOut:
+    return MentorProfileOut(
+        id=m.id,
+        user_id=m.user_id,
+        name=m.user.full_name if m.user else "Mentor",
+        avatar_url=m.user.avatar_url if m.user else None,
+        business_name=m.business_name,
+        business_domain=m.business_domain,
+        years_experience=m.years_experience,
+        business_description=m.business_description,
+        location=m.location,
+        expertise_areas=json.loads(m.expertise_areas) if m.expertise_areas else [],
+        business_model_experience=m.business_model_experience,
+        languages=json.loads(m.languages) if m.languages else [],
+        availability_schedule=json.loads(m.availability_schedule) if m.availability_schedule else [],
+        verification_status=m.verification_status,
+        rating=m.rating,
+        reviews_count=m.reviews_count,
+        bio=m.bio,
+        meeting_link=m.meeting_link,
+        success_story=m.success_story,
+        match_score=98.0,
+        why_suitable_for_user="Verified Mentor Profile"
+    )
+
+@router.get("/me", response_model=MentorProfileOut)
+def get_my_mentor_profile(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    mentor = db.query(MentorProfile).filter(MentorProfile.user_id == current_user.id).first()
+    if not mentor:
+        raise HTTPException(status_code=404, detail="Mentor profile not found for this user account.")
+    return format_mentor_out(mentor)
+
+@router.put("/me", response_model=MentorProfileOut)
+def update_my_mentor_profile(update: MentorProfileUpdate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    mentor = db.query(MentorProfile).filter(MentorProfile.user_id == current_user.id).first()
+    if not mentor:
+        raise HTTPException(status_code=404, detail="Mentor profile not found for this user account.")
+
+    update_dict = update.model_dump(exclude_unset=True)
+    if "expertise_areas" in update_dict and update_dict["expertise_areas"] is not None:
+        mentor.expertise_areas = json.dumps(update_dict["expertise_areas"])
+    if "languages" in update_dict and update_dict["languages"] is not None:
+        mentor.languages = json.dumps(update_dict["languages"])
+    if "availability_schedule" in update_dict and update_dict["availability_schedule"] is not None:
+        mentor.availability_schedule = json.dumps(update_dict["availability_schedule"])
+
+    for field in [
+        "business_name", "business_domain", "years_experience", "business_description",
+        "location", "business_model_experience", "bio", "meeting_link", "success_story"
+    ]:
+        if field in update_dict and update_dict[field] is not None:
+            setattr(mentor, field, update_dict[field])
+
+    db.commit()
+    db.refresh(mentor)
+    return format_mentor_out(mentor)
 
 @router.get("/list", response_model=List[MentorProfileOut])
 def get_mentors(domain: Optional[str] = None, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):

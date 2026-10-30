@@ -7,14 +7,23 @@ import {
 } from './types';
 
 const getApiBase = (): string => {
+  // 1. Check for explicit production backend URL configured via environment variables
+  const envUrl = (import.meta as any).env?.VITE_BACKEND_URL || (import.meta as any).env?.VITE_API_URL;
+  if (envUrl && typeof envUrl === 'string' && envUrl.trim()) {
+    const cleanUrl = envUrl.trim().replace(/\/$/, '');
+    return cleanUrl.endsWith('/api') ? cleanUrl : `${cleanUrl}/api`;
+  }
+
   if (typeof window !== 'undefined') {
-    // If running on Vite dev server (port 5173 or other dev port) or not on backend port 8001,
-    // connect directly to FastAPI on port 8001 to bypass Node proxy restrictions
-    if (window.location.port && window.location.port !== '8001') {
-      const hostname = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
-      return `http://${hostname || '127.0.0.1'}:8001/api`;
+    // 2. In local development (localhost / 127.0.0.1 on a non-backend port like 5173),
+    // connect directly to local FastAPI backend on port 8001
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (isLocalhost && window.location.port && window.location.port !== '8001') {
+      return `http://127.0.0.1:8001/api`;
     }
   }
+
+  // 3. In production, use relative /api (proxied via Vercel rewrites or serverless function)
   return '/api';
 };
 
@@ -188,6 +197,16 @@ export const api = {
   }).then(handleResponse<any>),
 
   // Mentors
+  getMentorProfile: () => fetch(`${API_BASE}/mentors/me`, {
+    headers: getHeaders()
+  }).then(handleResponse<MentorProfile>),
+
+  updateMentorProfile: (data: Partial<MentorProfile>) => fetch(`${API_BASE}/mentors/me`, {
+    method: 'PUT',
+    headers: getHeaders(),
+    body: JSON.stringify(data)
+  }).then(handleResponse<MentorProfile>),
+
   getMentors: (domain?: string) => {
     const url = domain && domain !== 'All' ? `${API_BASE}/mentors/list?domain=${encodeURIComponent(domain)}` : `${API_BASE}/mentors/list`;
     return fetch(url, { headers: getHeaders() }).then(handleResponse<MentorProfile[]>);

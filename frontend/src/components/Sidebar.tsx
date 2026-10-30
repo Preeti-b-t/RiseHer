@@ -35,7 +35,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const navItems = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { id: 'profile', label: 'My Entrepreneur Profile', icon: UserIcon },
+    {
+      id: 'profile',
+      label: user?.role === 'mentor' ? 'My Mentor Profile' : (user?.role === 'admin' ? 'Admin Profile' : 'My Entrepreneur Profile'),
+      icon: UserIcon
+    },
     { id: 'analysis', label: 'AI Business Analysis', icon: Sparkles, badge: 'AI' },
     { id: 'risk', label: 'Business Risk Assessment', icon: AlertTriangle },
     { id: 'schemes', label: 'SmartGov Connect', icon: Landmark, count: '7' },

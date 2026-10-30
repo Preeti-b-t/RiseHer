@@ -204,7 +204,7 @@ const MainApp: React.FC = () => {
           />
         );
       case 'profile':
-        return <ProfileView />;
+        return <ProfileView onNavigate={handleDashboardNavigate} />;
       case 'analysis':
         return <AnalysisView onNavigate={handleDashboardNavigate} />;
       case 'risk':

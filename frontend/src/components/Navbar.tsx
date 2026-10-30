@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, Bell, Sparkles, User as UserIcon, LogOut, CheckCircle2, ChevronDown, ShieldCheck } from 'lucide-react';
+import { Menu, Bell, Sparkles, User as UserIcon, LogOut, CheckCircle2, ChevronDown, ShieldCheck, Download } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { DemoSwitcher } from './DemoSwitcher';
 
@@ -31,7 +31,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const viewTitles: Record<string, string> = {
     overview: 'Executive Dashboard',
-    profile: 'Entrepreneur Profile',
+    profile: user?.role === 'mentor' ? 'Mentor Profile' : (user?.role === 'admin' ? 'Administrator Profile' : 'Entrepreneur Profile'),
     analysis: 'AI Business Intelligence',
     risk: 'Business Risk Assessment',
     schemes: 'SmartGov Connect',
@@ -72,6 +72,17 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Right side: Demo Persona Switcher + Notifications + Profile Avatar */}
       <div className="flex items-center gap-3">
+        {/* Download Project ZIP */}
+        <a
+          href="/RiseHer_Complete_Project.zip"
+          download="RiseHer_Complete_Project.zip"
+          className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-plum/20 hover:border-plum text-xs font-semibold text-plum hover:bg-blush transition-colors"
+          title="Download complete RiseHer project ZIP archive"
+        >
+          <Download size={13} className="text-coral" />
+          <span>ZIP</span>
+        </a>
+
         {/* Hackathon Judge Persona Switcher */}
         <DemoSwitcher />
 
@@ -162,7 +173,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold text-charcoal hover:bg-blush hover:text-plum transition-colors flex items-center gap-2"
                   >
                     <UserIcon size={14} />
-                    <span>My Entrepreneur Profile</span>
+                    <span>{user?.role === 'mentor' ? 'My Mentor Profile' : (user?.role === 'admin' ? 'Admin Profile' : 'My Entrepreneur Profile')}</span>
                   </button>
                   <button
                     onClick={() => {

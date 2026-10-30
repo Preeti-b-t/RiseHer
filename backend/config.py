@@ -113,7 +113,8 @@ def get_email_credentials() -> dict:
         "use_tls": use_tls_str not in ["false", "0", "no"]
     }
 
-DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{BASE_DIR}/riseher.db")
+default_db = "/tmp/riseher.db" if os.getenv("VERCEL") == "1" else f"{BASE_DIR}/riseher.db"
+DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{default_db}")
 SECRET_KEY = os.getenv("SECRET_KEY", "riseher-super-secret-key-empowering-women-entrepreneurs-2026")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days for hackathon ease

@@ -291,6 +291,20 @@ class MentorProfileOut(BaseModel):
     why_suitable_for_user: Optional[str] = None
     match_score: Optional[float] = None
 
+class MentorProfileUpdate(BaseModel):
+    business_name: Optional[str] = None
+    business_domain: Optional[str] = None
+    years_experience: Optional[int] = None
+    business_description: Optional[str] = None
+    location: Optional[str] = None
+    expertise_areas: Optional[List[str]] = None
+    business_model_experience: Optional[str] = None
+    languages: Optional[List[str]] = None
+    availability_schedule: Optional[List[str]] = None
+    bio: Optional[str] = None
+    meeting_link: Optional[str] = None
+    success_story: Optional[str] = None
+
 class MentorshipRequestCreate(BaseModel):
     mentor_id: int
     subject: str

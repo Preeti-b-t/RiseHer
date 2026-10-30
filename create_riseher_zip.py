@@ -1,57 +1,138 @@
+#!/usr/bin/env python3
+"""
+RiseHer Complete Project Packaging Script
+Creates a clean, portable RiseHer_Complete_Project.zip excluding
+temporary files, virtual environments, node_modules, logs, and sensitive credentials.
+"""
+
 import os
 import shutil
 import zipfile
+from pathlib import Path
 
-def make_riseher_zip():
-    base_dir = "/Users/preetitevaramani/Documents/sih_rainfall_postprocessor/weather_regime_rainfall_ai"
-    output_zip = os.path.join(base_dir, "RiseHer_Complete_Project.zip")
-    artifact_dir = "/Users/preetitevaramani/.gemini/antigravity/brain/b2625eea-ad74-422f-b364-622f32e04f77"
-    artifact_zip = os.path.join(artifact_dir, "RiseHer_Complete_Project.zip")
+def create_riseher_zip():
+    base_dir = Path("/Users/preetitevaramani/Documents/sih_rainfall_postprocessor/weather_regime_rainfall_ai")
+    output_zip = base_dir / "RiseHer_Complete_Project.zip"
+    artifact_dir = Path("/Users/preetitevaramani/.gemini/antigravity/brain/b2625eea-ad74-422f-b364-622f32e04f77")
+    artifact_zip = artifact_dir / "RiseHer_Complete_Project.zip"
 
-    if os.path.exists(output_zip):
-        os.remove(output_zip)
+    # Remove previous zip if present
+    if output_zip.exists():
+        output_zip.unlink()
 
-    include_dirs = ["backend", "frontend", "tests", "scripts"]
-    include_files = ["README.md", ".env.example", ".env", "run_riseher.sh", "requirements.txt"]
-    
-    exclude_dirs = {"node_modules", ".venv", "__pycache__", ".pytest_cache", "dist", ".git", ".idea", ".vscode"}
-    exclude_extensions = {".pyc", ".pyo", ".DS_Store"}
+    # Directories and files to include
+    include_dirs = ["backend", "frontend", "docs", "scripts", "tests"]
+    include_files = [
+        "README.md",
+        "requirements.txt",
+        ".env.example",
+        "run_riseher.sh"
+    ]
+
+    # Explicit exclusions
+    exclude_dir_names = {
+        "node_modules",
+        ".venv",
+        "venv",
+        "env",
+        "__pycache__",
+        ".pytest_cache",
+        ".git",
+        ".idea",
+        ".vscode",
+        "dist",
+        ".cache"
+    }
+
+    exclude_extensions = {
+        ".pyc",
+        ".pyo",
+        ".DS_Store",
+        ".db",
+        ".sqlite",
+        ".sqlite3",
+        ".log",
+        ".jsonl"
+    }
+
+    exclude_file_names = {
+        ".env",
+        ".env.local",
+        ".env.production",
+        "dev_mailbox.jsonl",
+        "riseher.db"
+    }
 
     total_files = 0
-    with zipfile.ZipFile(output_zip, "w", zipfile.ZIP_DEFLATED) as zf:
-        # Add root individual files
+    total_bytes = 0
+
+    print(f">> Packing RiseHer Project into: {output_zip.name} ...")
+
+    with zipfile.ZipFile(output_zip, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
+        # 1. Add root files
         for fname in include_files:
-            fpath = os.path.join(base_dir, fname)
-            if os.path.exists(fpath):
-                arcname = os.path.join("RiseHer", fname)
-                zf.write(fpath, arcname)
+            fpath = base_dir / fname
+            if fpath.is_file():
+                arcname = f"RiseHer/{fname}"
+                # Preserve executable permission for run_riseher.sh
+                zinfo = zipfile.ZipInfo.from_file(fpath, arcname=arcname)
+                if fname.endswith(".sh"):
+                    zinfo.external_attr = 0o755 << 16
+                with open(fpath, "rb") as f_in:
+                    zf.writestr(zinfo, f_in.read())
                 total_files += 1
-                print(f"Added root file: {arcname}")
+                total_bytes += fpath.stat().st_size
+                print(f"  + Added file: {arcname}")
 
-        # Add directories recursively
+        # 2. Add directories recursively
         for dname in include_dirs:
-            dir_path = os.path.join(base_dir, dname)
-            if not os.path.exists(dir_path):
+            dir_path = base_dir / dname
+            if not dir_path.is_dir():
+                print(f"  ! Warning: Directory not found: {dname}")
                 continue
+
             for root, dirs, files in os.walk(dir_path):
-                # Filter out excluded directories in-place
-                dirs[:] = [d for d in dirs if d not in exclude_dirs and not d.startswith(".")]
+                # Filter out excluded subdirectories in place
+                dirs[:] = [
+                    d for d in dirs
+                    if d not in exclude_dir_names and not d.startswith(".")
+                ]
+
+                rel_root = Path(root).relative_to(base_dir)
+
                 for f in files:
-                    if any(f.endswith(ext) for ext in exclude_extensions) or (f.startswith(".") and not f.endswith(".example")):
+                    # Skip excluded files
+                    if f in exclude_file_names:
                         continue
-                    file_full_path = os.path.join(root, f)
-                    rel_path = os.path.relpath(file_full_path, base_dir)
-                    arcname = os.path.join("RiseHer", rel_path)
-                    zf.write(file_full_path, arcname)
+                    if any(f.endswith(ext) for ext in exclude_extensions):
+                        continue
+                    if f.startswith(".") and not f.endswith(".example") and not f.endswith(".gitignore"):
+                        continue
+
+                    full_path = Path(root) / f
+                    arcname = f"RiseHer/{rel_root}/{f}"
+
+                    zinfo = zipfile.ZipInfo.from_file(full_path, arcname=arcname)
+                    if f.endswith(".sh"):
+                        zinfo.external_attr = 0o755 << 16
+
+                    with open(full_path, "rb") as f_in:
+                        zf.writestr(zinfo, f_in.read())
+
                     total_files += 1
+                    total_bytes += full_path.stat().st_size
 
-    zip_size_mb = os.path.getsize(output_zip) / (1024 * 1024)
-    print(f"\nCreated: {output_zip} ({zip_size_mb:.2f} MB, {total_files} files)")
+    zip_size_mb = output_zip.stat().st_size / (1024 * 1024)
+    raw_size_mb = total_bytes / (1024 * 1024)
+    print(f"\n✓ Archive Created: {output_zip}")
+    print(f"  - Total Files: {total_files}")
+    print(f"  - Raw Size:    {raw_size_mb:.2f} MB")
+    print(f"  - Compressed:  {zip_size_mb:.2f} MB")
 
-    # Copy to artifact directory
-    if os.path.exists(artifact_dir):
+    # Copy to the Antigravity conversation artifact directory
+    if artifact_dir.exists():
         shutil.copyfile(output_zip, artifact_zip)
-        print(f"Copied to artifact dir: {artifact_zip}")
+        print(f"✓ Copied artifact to: {artifact_zip}")
 
 if __name__ == "__main__":
-    make_riseher_zip()
+    create_riseher_zip()
