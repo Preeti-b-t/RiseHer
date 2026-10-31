@@ -135,7 +135,8 @@ def dispatch_email_otp(email: str, otp_code: str, purpose: str = "registration")
     if creds.get("dev_mode"):
         try:
             import datetime
-            mailbox_path = os.path.join(os.path.dirname(__file__), "dev_mailbox.jsonl")
+            mailbox_dir = "/tmp" if os.path.exists("/tmp") and (os.getenv("VERCEL") or "/var/task" in __file__) else os.path.dirname(__file__)
+            mailbox_path = os.path.join(mailbox_dir, "dev_mailbox.jsonl")
             log_entry = {
                 "timestamp": datetime.datetime.utcnow().isoformat(),
                 "recipient": target_email,
