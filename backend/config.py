@@ -115,12 +115,21 @@ def get_email_credentials() -> dict:
 
 is_serverless = bool(
     os.getenv("VERCEL") == "1" or
+    os.getenv("VERCEL_ENV") or
     os.getenv("AWS_LAMBDA_FUNCTION_NAME") or
     os.getenv("LAMBDA_TASK_ROOT") or
     "/var/task" in str(BASE_DIR)
 )
-default_db = "/tmp/riseher.db" if is_serverless else f"{BASE_DIR}/riseher.db"
-DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{default_db}")
+
+raw_db_url = (os.getenv("DATABASE_URL") or "").strip()
+if is_serverless:
+    # On Vercel / AWS Lambda, redirect SQLite to writable /tmp
+    if not raw_db_url or "sqlite" in raw_db_url:
+        DATABASE_URL = "sqlite:////tmp/riseher.db"
+    else:
+        DATABASE_URL = raw_db_url
+else:
+    DATABASE_URL = raw_db_url if raw_db_url else f"sqlite:///{BASE_DIR}/riseher.db"
 SECRET_KEY = os.getenv("SECRET_KEY", "riseher-super-secret-key-empowering-women-entrepreneurs-2026")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days for hackathon ease

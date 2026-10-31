@@ -1,0 +1,37 @@
+# Vercel Deployment Exclusions
+# Exclude legacy archive files & non-RiseHer files
+*.zip
+!RiseHer_Complete_Project.zip
+*.csv
+*.pdf
+*.docx
+*.ipynb
+
+# Virtual environments & local caches
+.venv/
+venv/
+node_modules/
+__pycache__/
+*/__pycache__/
+.pytest_cache/
+.git/
+
+# Root-anchored legacy SIH projects (do not ignore frontend subfolders)
+/AgriGuard-X/
+/app/
+/data/
+/feature_engineering/
+/kannada_kalike/
+/models/
+/outputs/
+/runs/
+/saved_models/
+/scratch/
+/src/
+/static/
+/uploads/
+*.db
+riseher.db
+backend/riseher.db
+dev_mailbox.jsonl
+backend/dev_mailbox.jsonl

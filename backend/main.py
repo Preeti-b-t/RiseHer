@@ -35,12 +35,13 @@ from backend.routers import (
     progress, learning, sdg, community, admin
 )
 
-# Initialize database schema
-Base.metadata.create_all(bind=engine)
-
-# Seed database with realistic scenario data
-with SessionLocal() as db:
-    seed_database(db)
+# Initialize database schema and seed data safely
+try:
+    Base.metadata.create_all(bind=engine)
+    with SessionLocal() as db:
+        seed_database(db)
+except Exception as e:
+    print(f"[RiseHer Database Startup Warning] Could not auto-seed database: {e}")
 
 app = FastAPI(
     title="RiseHer API",
