@@ -165,3 +165,5 @@ scratch/
 /benchmark_research_models.py
 /download_entrepreneur_images.py
 /PS1_Enhanced.docx
+.vercel
+.env*

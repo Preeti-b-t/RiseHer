@@ -1,5 +1,27 @@
 import os
+import sys
+import types
 from pathlib import Path
+
+# Ensure paths and package alias exist regardless of invocation directory
+CURRENT_DIR = Path(__file__).resolve().parent
+PARENT_DIR = CURRENT_DIR.parent
+
+for p in [str(PARENT_DIR), str(CURRENT_DIR)]:
+    if p not in sys.path:
+        sys.path.insert(0, p)
+
+# Register 'backend' package in sys.modules if not already present
+# (e.g. when executed directly in Vercel serverless container as /var/task/main.py)
+if "backend" not in sys.modules:
+    try:
+        import backend
+    except ImportError:
+        backend_pkg = types.ModuleType("backend")
+        backend_pkg.__path__ = [str(CURRENT_DIR)]
+        backend_pkg.__file__ = str(CURRENT_DIR / "__init__.py")
+        sys.modules["backend"] = backend_pkg
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 

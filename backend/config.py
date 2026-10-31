@@ -113,7 +113,13 @@ def get_email_credentials() -> dict:
         "use_tls": use_tls_str not in ["false", "0", "no"]
     }
 
-default_db = "/tmp/riseher.db" if os.getenv("VERCEL") == "1" else f"{BASE_DIR}/riseher.db"
+is_serverless = bool(
+    os.getenv("VERCEL") == "1" or
+    os.getenv("AWS_LAMBDA_FUNCTION_NAME") or
+    os.getenv("LAMBDA_TASK_ROOT") or
+    "/var/task" in str(BASE_DIR)
+)
+default_db = "/tmp/riseher.db" if is_serverless else f"{BASE_DIR}/riseher.db"
 DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{default_db}")
 SECRET_KEY = os.getenv("SECRET_KEY", "riseher-super-secret-key-empowering-women-entrepreneurs-2026")
 ALGORITHM = "HS256"
